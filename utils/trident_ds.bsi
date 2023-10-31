@@ -1,0 +1,34 @@
+tuple EventNumber {
+  uint32 eventNumber;
+};
+
+tuple RawPmtSegment {
+  uint64 startTime;
+  uint32 channelNumber;
+  [uint16] adcValue;
+};
+
+tuple RawSegment {
+  uint64 startTime;
+  uint32 channelNumber;
+  [uint16] adcValue;
+  uint64 busyTime;
+  uint32 sampleSize;
+  float baseLine;
+};
+
+struct RawData {
+  uint32 packageId = 1;
+  uint32 packageNumber = 2;
+  uint64 packageTime = 3;
+  uint64 packageEndTime = 4;
+  [RawPmtSegment] rawSegments = 5;
+};
+
+struct GroupData {
+  uint32 runNumber = 1;
+  uint32 groupNumber = 2;
+  uint64 startTime = 3;
+  uint64 endTime = 4;
+  [RawSegment] segments = 5;
+};
