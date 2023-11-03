@@ -87,6 +87,9 @@ namespace raw_group_trans {
         }
         std::vector<uint16_t> segment(segment_size, 0);
         s.read(reinterpret_cast<char *>(&*segment.begin()), segment_size * 2);
+        // for(auto &s: segment){
+        //     std::cout << startTime << std::endl;
+        // }
         return {startTime, channelNumber, segment, busy, sample_size, 0.};
     }
 

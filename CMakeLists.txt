@@ -36,7 +36,20 @@ set(CMAKE_C_FLAGS_OPTDEBUG "${CMAKE_CXX_FLAGS_NATIVE} -g"
         CACHE STRING "" FORCE)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
-find_package(ROOT)
+
+#----------------------------------------------------------------------------
+#find the yaml-cpp package
+find_package(yaml-cpp REQUIRED)
+
+#----------------------------------------------------------------------------
+FIND_PACKAGE(ROOT REQUIRED COMPONENTS Geom TMVA MathMore)
+IF (ROOT_FOUND)
+    INCLUDE_DIRECTORIES(${ROOT_INCLUDE_DIRS})
+    INCLUDE_DIRECTORIES(${ROOT_INCLUDE_DIR})
+    LINK_LIBRARIES(${ROOT_LIBRARIES})
+    LINK_DIRECTORIES(${ROOT_LIBRARY_DIR})
+ENDIF ()
+
 
 include(ExternalProject)
 
@@ -49,9 +62,9 @@ include_directories(
 
 link_libraries(${BS3_INSTALL_PATH}/lib/libpbsf.a ${ROOT_LIBRARIES})
 
-# build group from raw data
-add_executable(raw_to_group src/raw_to_group.cc src/transformer/RawGroupTrans.cc)
+# emulator
+add_subdirectory(Emulator)
 
-# build root from tel file
-add_executable(group_to_root src/group_to_root.cc src/transformer/GroupRootTrans.cc)
+# data process chain
+add_subdirectory(src)
 
