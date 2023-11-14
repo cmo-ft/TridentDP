@@ -175,7 +175,7 @@ namespace raw_group_trans {
                     stream_ptr = nullptr;
                 }
             }
-            return *this;
         }
+        return *this;
     }
 } // namespace raw_tel_trans
