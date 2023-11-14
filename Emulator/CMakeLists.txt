@@ -16,4 +16,4 @@ add_executable(Emulator Emulator.cpp ${Emulator_sources} ${Emulator_headers})
 target_link_libraries(Emulator ${YAML_CPP_LIBRARIES})
 
 
-install(TARGETS Emulator DESTINATION bin)
+install(TARGETS Emulator DESTINATION ./)
