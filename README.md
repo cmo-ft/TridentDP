@@ -1,9 +1,13 @@
 # TRIDENT Data Process
 Data process chain of TRIDENT based on bamboo-shoot3 and ROOT.
 
-* Do not support c++17
-
 The repository contains 2 parts: `Emulator` and `Data Process`.
+
+## Dependencies
+* Do not support c++17
+* bamboo-shoot3 can be found at https://github.com/revive/bamboo-shoot3
+* ROOT can be installed from https://root.cern/
+
 
 ## Emulator
 Transform the `data.root` (output of the `hDom` program) into the 
