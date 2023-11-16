@@ -141,7 +141,7 @@ namespace raw_group_trans {
                     // Get the end time in unit [bin]
                     auto seg_end = segment.startTime + segment.adcValue.size();
                     /*
-                     * The segments is the actual data for this group; current_end and group_start labels the last and the first time of current group.
+                     * The segments are the actual data for this group; current_end and group_start labels the last and the first time of current group.
                      * if segments is empty  OR  group is short enough  OR  gap between group and segment is short enough
                      * AND if current_end==0  OR  gap between group and start time is short enough  OR  (group not empty  AND  group is short enough
                      * THEN add current segment into group
@@ -174,6 +174,7 @@ namespace raw_group_trans {
                 } else {
                     stream_ptr = nullptr;
                 }
+                break;
             }
         }
         return *this;
