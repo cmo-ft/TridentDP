@@ -118,6 +118,10 @@ namespace raw_group_trans {
         ++*this;
     }
 
+    // Sort segments with order of time
+    auto sort_segments= [](const RawSegment& a, const RawSegment& b){
+        return a.startTime < b.startTime;
+    };
 
     read_iterator &read_iterator::operator++() {
         try {
@@ -153,6 +157,8 @@ namespace raw_group_trans {
                             current_end = current_end > seg_end ? current_end : seg_end;
                             group_start = segment.startTime < group_start ? segment.startTime : group_start;
                     } else {
+                        // Sort segments with time order
+                        std::sort(segments.begin(), segments.end(), sort_segments);
                         group = {run_number, group_number++, group_start, current_end,
                                  std::move(segments)};
                         segments = {segment};
@@ -164,6 +170,8 @@ namespace raw_group_trans {
             }
         } catch (const pbss::early_eof_error &) {
             if (!segments.empty()) {
+                // Sort segments with time order
+                std::sort(segments.begin(), segments.end(), sort_segments);
                 group = {run_number, group_number++, group_start, current_end,
                          std::move(segments)};
                 segments = {};
