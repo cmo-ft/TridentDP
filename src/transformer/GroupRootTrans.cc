@@ -26,7 +26,7 @@ void GroupRootTrans::ReadData(const GroupData &data) {
 
     for(auto &seg: data.segments){
         ch_id = seg.channelNumber;
-        t_start = 2e-9f * (float) seg.startTime;
+        t_start = 2.f * (float) seg.startTime;
         n_samp = seg.sampleSize;
         adc_val = seg.adcValue;
         t_waveform->Fill();

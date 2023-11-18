@@ -69,7 +69,7 @@ namespace raw_group_trans {
         auto channelNumber = word;
 
         // Following 8 bytes: start time in unit [bin]
-        // Actual time (in ns) = startTime * 2e-9
+        // Actual time (in ns) = startTime * 2
         auto startTime = read_segtime(s);
 
         // Size for adc values: size - 4(header) - 4 (ch_id) - 8(t_start) - 8(t_busy)
