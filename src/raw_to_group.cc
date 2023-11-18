@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     uint32_t group_no = 0;
     uint32_t gap = 5000;
 
-    for (int opt; (opt = getopt(argc, argv, "o:r:g:a:m")) > 0;) {
+    for (int opt; (opt = getopt(argc, argv, "o:r:g:a")) > 0;) {
         switch (opt) {
             case 'o':
                 output = optarg;
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     if (output.empty()) {
         cout
             << "Usage: " << argv[0]
-            << " -o output [-r run_no] [-g group_no] [-a gap] [-m] input ...\n";
+            << " -o output [-r run_no] [-g group_no] [-a gap] inputs ...\n";
         return 1;
     }
 

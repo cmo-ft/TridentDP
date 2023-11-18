@@ -110,18 +110,18 @@ namespace raw_group_trans {
     }
 
 
+    constexpr auto min_gap = 500u;
     read_iterator::read_iterator(std::istream &s, uint32_t run_no, uint32_t group_no, uint32_t gap)
-        : run_number(run_no), group_number(group_no), group_gap{gap}{
+        : run_number(run_no), group_number(group_no){
         stream_ptr = &s;
+        group_gap = gap<min_gap? gap : min_gap;
         ++*this;
     }
 
 
-    constexpr auto min_gap = 500u;
-
     read_iterator &read_iterator::operator++() {
-        while (true) {
-            try {
+        try {
+            while (true) {
                 // parse the first 4 bytes
                 // word>>24 (first 1 byte) represents protocol:
                 auto word = rw(*stream_ptr);
@@ -131,10 +131,11 @@ namespace raw_group_trans {
                 // depending on protocol: 0xb1 means type 1 and 0xb2 means type 2
                 // For now we ignore type 2
                 auto type = size_type.second;
-                if (size == 0) {
-                    if (check_magic(0xa1, word))
-                        continue;
-                } else {
+                if (!check_magic(0xb2, word)) {
+                    break;
+                }
+
+                if (size != 0) {
                     // Get RawSegment (t_start, ch_id, adv_val, tbusy...)
                     auto segment = read_block(size, *stream_ptr, type);
 
@@ -143,38 +144,31 @@ namespace raw_group_trans {
                     /*
                      * The segments are the actual data for this group; current_end and group_start labels the last and the first time of current group.
                      * if segments is empty  OR  group is short enough  OR  gap between group and segment is short enough
-                     * AND if current_end==0  OR  gap between group and start time is short enough  OR  (group not empty  AND  group is short enough
                      * THEN add current segment into group
+                     * else current segment belongs to the next group
                      */
-                    if (!(!segments.empty() && current_end - group_start > 1000000 &&
-                          current_end + min_gap < segment.startTime)) {
-                        if (current_end == 0 || current_end + group_gap > segment.startTime ||
-                            (!segments.empty() && current_end - group_start < 1000000)) {
+                    if (segments.empty() || (current_end-group_start<1000000) ||
+                    (current_end+group_gap>segment.startTime)) {
                             segments.push_back(segment);
                             current_end = current_end > seg_end ? current_end : seg_end;
-                            group_start = segment.startTime < group_start
-                                          ? segment.startTime
-                                          : group_start;
-                            // continue to read rest blocks
-                            continue;
-                        }
+                            group_start = segment.startTime < group_start ? segment.startTime : group_start;
+                    } else {
+                        group = {run_number, group_number++, group_start, current_end,
+                                 std::move(segments)};
+                        segments = {segment};
+                        group_start = segment.startTime;
+                        current_end = seg_end;
+                        break;
                     }
-                    group = {run_number, group_number++, group_start, current_end,
-                             std::move(segments)};
-                    segments = {segment};
-                    group_start = segment.startTime;
-                    current_end = seg_end;
-                    break;
                 }
-            } catch (const pbss::early_eof_error &) {
-                if (!segments.empty()) {
-                    group = {run_number, group_number++, group_start, current_end,
-                             std::move(segments)};
-                    segments = {};
-                } else {
-                    stream_ptr = nullptr;
-                }
-                break;
+            }
+        } catch (const pbss::early_eof_error &) {
+            if (!segments.empty()) {
+                group = {run_number, group_number++, group_start, current_end,
+                         std::move(segments)};
+                segments = {};
+            } else {
+                stream_ptr = nullptr;
             }
         }
         return *this;
