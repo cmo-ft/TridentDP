@@ -9,7 +9,7 @@
 #include <TTree.h>
 
 
-#include "trident_ds.hh"
+#include "data_structure/trident_ds.hh"
 
 class GroupRootTrans {
 public:

@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <istream>
 #include <stdexcept>
-#include "trident_ds.hh"
+#include "data_structure/trident_ds.hh"
 
 namespace raw_group_trans {
 

@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
     auto data_file = open_sequential_input_file(ifname, TridentRealm ());
     auto group_data = data_file.read_one_type<GroupData>();
 
-    GroupRootTrans gr_trans{ofname};
+GroupRootTrans gr_trans{ofname};
 
     for (const auto &data : group_data) {
         gr_trans.ReadData(data);

@@ -3,7 +3,8 @@ add_executable(raw_to_group raw_to_group.cc transformer/RawGroupTrans.cc)
 install(TARGETS raw_to_group DESTINATION ./) 
 
 # build root from group file
-add_executable(group_to_root group_to_root.cc transformer/GroupRootTrans.cc)
+add_executable(group_to_root group_to_root.cc transformer/GroupRootTrans.cc
+        data_structure/Event.cc )
 install(TARGETS group_to_root DESTINATION ./) 
 
 # read raw data as text
