@@ -49,8 +49,6 @@ int main(int argc, char** argv){
         size_t evt_size = 0;
         unordered_map<int, vector<double>> channel_id_voltage;
         for(size_t ihit=0; ihit<pmt_hit_t->size(); ihit++){
-            // int dom_id = (*pmt_dom_id)[ihit];
-            // channel_id = dom_id * 100 + pmt_id
             int channel_id = (*pmt_dom_id)[ihit]*100 + (*pmt_pmt_id)[ihit];
             float t = (*pmt_hit_t)[ihit];
             if(channel_id_voltage.find(channel_id) == channel_id_voltage.end()){
@@ -71,16 +69,9 @@ int main(int argc, char** argv){
         // format: protocol, channel_id, event_id (time stamp), v0, v1, ..., v2499
         unsigned int header{0};
         for(auto &iter: channel_id_voltage){
-            // outfile << protocol << " "; //<< evt_size << " " << channel_id_voltage.size() << " ";
-            // outfile.write((char*)&protocol, 1);
-            // Size for current block:  size(adv_value)  4(header)  4 (ch_id)  8(t_start)  8(t_busy)
-            auto block_size = iter.second.size() * 2 + 4 + 4 + 8 + 8;
-            // std::cout<<iter.second.size()<<std::endl;
-            // std::cout<<bloc_size<<std::endl;
-            // outfile.write((char*)&bloc_size, 3);
 
-            // modify header into the format that is readable by raw_reader
-            // block_size = 302 * 2 + 24;
+            auto block_size = iter.second.size() * 2 + 4 + 4 + 8 + 8;
+
             header = (protocol<<24);
             header = (header & 0xFF000000) | block_size;
             outfile.write((char*)&header, 4);

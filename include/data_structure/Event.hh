@@ -16,10 +16,18 @@ struct SingleHit{
     uint64_t ch_id;
 };
 
+struct SingleTrigger{
+    int num_hits_required = 4;
+    float time_window = 20;
+    float r_min = 1;
+    float r_max = 300;
+    bool DOM_level = false;
+};
 
 
 class Event {
 public:
+    Event();
     int GetTriggerLevel() {return trigger_level;}
     float GetStartTime() {return start_t;}
     const std::vector<SingleHit>& GetHits() {return hits;}
@@ -44,8 +52,10 @@ public:
      * @param dom_level_trig: trigger on dom level instead of hit level.
      * @return: bool value which illustrates if the hits have passed the trigger.
      */
-    bool LocalCoincidenceTrigger(SingleHit *p_hits_begin, ulong hits_len, int num_hits_required,
-                                 float time_window, float r_min, float r_max, bool dom_level_trig = false) const;
+    bool LocalCoincidenceTrigger(SingleHit *p_hits_begin, ulong hits_len, SingleTrigger &trigger) const;
+
+    void RegisterTrigger(int num_hits_required, float time_window, float r_min, float r_max,
+                         bool dom_level_trig = false);
 
     /*!
      * Execute trigger flow. The later trigger should be restrict tighter than the earlier one.
@@ -54,9 +64,7 @@ public:
     int TriggerFlow();
 
 private:
-    float baseline_time_window = 20;
-    int baseline_nhits = 2;
-    float baseline_r_min = 1, baseline_r_max = 100;
+    std::vector<SingleTrigger> trigger_flow;
     int trigger_level{0};
     float start_t{0};
     std::vector<SingleHit> hits;
