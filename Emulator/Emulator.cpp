@@ -5,12 +5,15 @@
 
 #include "WaveformSimulator.hh"
 #include <iostream>
+#include <utility>
 #include <fstream>
 
 using std::vector;
 using std::ofstream;
 using std::ios;
 using std::unordered_map;
+using std::map;
+using std::pair;
 
 int main(int argc, char** argv){
     TFile* infile;
@@ -47,18 +50,23 @@ int main(int argc, char** argv){
     for(int ientry=0; ientry<pmt_tree->GetEntries(); ientry++){
         pmt_tree->GetEntry(ientry);
 
+        // Get the start time of the event: min hit T-200ns
+        float t_start = *std::min_element(pmt_hit_t->begin(), pmt_hit_t->end()) - 200;
 
-        size_t evt_size = 0;
-        unordered_map<int, vector<double>> channel_id_voltage;
+        // unordered_map<int, vector<double>> channel_id_voltage;
+        map<pair<int, int>, vector<double>> channel_id_voltage;
         for(size_t ihit=0; ihit<pmt_hit_t->size(); ihit++){
             int channel_id = (*pmt_dom_id)[ihit]*100 + (*pmt_pmt_id)[ihit];
-            float t = (*pmt_hit_t)[ihit];
-            if(channel_id_voltage.find(channel_id) == channel_id_voltage.end()){
-                channel_id_voltage[channel_id] = WaveformSimulator::GenerateBaseline((int) (time_window / time_per_bin) );
-                // each dom contains channel_id_voltage[dom_id].size() + 1 data. +1 since one data is for DomId
-                evt_size += channel_id_voltage[channel_id].size() + 1;
+            // t = time relative to t_start
+            float t = (*pmt_hit_t)[ihit] - t_start;
+            // id of the time window for this hit
+            int t_window_id = (int) (t / time_window);
+            auto patch_index_of_current_hit = std::make_pair(channel_id, t_window_id);
+            // if(channel_id_voltage.find(channel_id) == channel_id_voltage.end()){
+            if(channel_id_voltage.find(patch_index_of_current_hit) == channel_id_voltage.end()){
+                channel_id_voltage[patch_index_of_current_hit] = WaveformSimulator::GenerateBaseline((int) (time_window / time_per_bin) );
             }
-            wf_simulator.AddSinglePhoton(channel_id_voltage[channel_id], t, time_per_bin);
+            wf_simulator.AddSinglePhoton(channel_id_voltage[patch_index_of_current_hit], t, time_per_bin);
         }
 
         // Check threshold for each waveform
@@ -81,8 +89,8 @@ int main(int argc, char** argv){
             vector<double>& v_voltage = iter.second;
             // Write channel_id and start time
             // board id
-            outfile.write((char*)&(iter.first), 4);
-            unsigned long t_begin = ientry;
+            outfile.write((char*)&(iter.first.first), 4);
+            unsigned long t_begin = ientry * 100000 + (long) (iter.first.second*time_window);
             outfile.write((char*)&t_begin, 8);
 
             unsigned long tbusy{0};
