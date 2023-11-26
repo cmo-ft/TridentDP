@@ -28,7 +28,7 @@ int main(int argc, char** argv){
     waveform_path = argv[3];
 
     const double time_per_bin = 2;
-    const double time_window = 5000; // ns
+    const double time_window = 1000; // ns
     const unsigned int protocol = 0xb2;
     const double mV2ADC = (pow(2,14)-1)*1000/2.16;
 
