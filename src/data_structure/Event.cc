@@ -2,12 +2,14 @@
 // Created by cmo on 2023/11/20.
 //
 
+#include <cmath>
+#include "constant.hh"
 #include "data_structure/Event.hh"
 
 using std::vector;
 using std::queue;
 
-Event::Event() {
+Event::Event(float start_t): start_t(start_t) {
     RegisterTrigger(4, 20, 1, 300, false);
 }
 
@@ -15,12 +17,39 @@ Event::Event() {
 int Event::ReconHits(RawSegment* seg) {
     int num_hits = 0;
     auto& adc_val = seg->adcValue;
-    for(ulong ival=0; ival<adc_val.size()-2; ival++){
-        auto dy = adc_val[ival+1] - adc_val[ival];
-        auto ddy = adc_val[ival] + adc_val[ival+2] - 2*adc_val[ival+1];
-        if(dy>=0 && ddy>0){
-            num_hits++;
-            hits.push_back({static_cast<float>(ival), seg->channelNumber});
+    float seg_start_t = (float) seg->startTime * time_per_sample;
+
+    // TODO: Find the right way to calculate baseline.
+    ushort baseline_value = 8620;
+    // TODO: Decide the suitable threshold & single_hit_integral
+    float threshold = 1.5, single_hit_integral = 60.;
+
+    vector<float> adc_voltage(adc_val.size());
+    for (ulong i_val=0; i_val < adc_val.size(); i_val++){
+        adc_voltage[i_val] = (float) (baseline_value - adc_val[i_val] / (pow(2, 14) - 1) * 2.16 * 1000);
+    }
+
+    // Both a flag shows if there are hits in current i_val and a value records the hit-start time.
+    int hit_start_idx = -1;
+    // Sum of adc_voltage for a triggered bump.
+    float integral = 0;
+    for(ulong i_val=0; i_val < adc_voltage.size() - 3; i_val++){
+        if (hit_start_idx != -1){
+            integral += adc_voltage[i_val];
+            if(adc_voltage[i_val] < threshold && adc_voltage[i_val + 1] < threshold && adc_voltage[i_val + 2] < threshold){
+            // If there are three consecutive values below the threshold: triggering over
+
+                int hits_in_previous_bump = (int) std::round(integral/single_hit_integral);
+
+                num_hits += hits_in_previous_bump;
+                for(int i=0; i<hits_in_previous_bump; i++){
+                    hits.push_back({seg_start_t + (float )hit_start_idx*time_per_sample, seg->channelNumber});
+                }
+                hit_start_idx = -1;
+            }
+        } else if(adc_voltage[i_val] > threshold && adc_voltage[i_val + 1] > threshold && adc_voltage[i_val + 2] > threshold){
+        // If there are three consecutive values over the threshold: triggering start
+            hit_start_idx = (int) i_val;
         }
     }
     return num_hits;

@@ -16,6 +16,12 @@ struct SingleHit{
     uint64_t ch_id;
 };
 
+struct SingleWaveform{
+    float t_start;
+    std::vector<float> adc_voltage;
+    uint64_t ch_id;
+};
+
 struct SingleTrigger{
     int num_hits_required = 4;
     float time_window = 20;
@@ -27,7 +33,7 @@ struct SingleTrigger{
 
 class Event {
 public:
-    Event();
+    Event(float start_t);
     int GetTriggerLevel() {return trigger_level;}
     float GetStartTime() {return start_t;}
     const std::vector<SingleHit>& GetHits() {return hits;}

@@ -3,8 +3,8 @@
 #include <TFile.h>
 #include <unordered_map>
 
+#include "constant.hh"
 #include "WaveformSimulator.hh"
-#include <iostream>
 #include <utility>
 #include <fstream>
 
@@ -30,8 +30,6 @@ int main(int argc, char** argv){
     ofstream outfile(argv[2], ios::out | ios::binary);
     waveform_path = argv[3];
 
-    const double time_per_bin = 2;
-    const double time_window = 1000; // ns
     const unsigned int protocol = 0xb2;
     auto get_adc_from_mV = [](double mV)->short {
         return (short) (8620 - mV*(pow(2,14)-1) / 1000 / 2.16);
@@ -60,15 +58,15 @@ int main(int argc, char** argv){
             // t = time relative to t_start
             float t = (*pmt_hit_t)[ihit] - t_start;
             // id of the time window for this hit
-            int t_window_id = (int) (t / time_window);
+            int t_window_id = (int) (t / time_window_per_batch);
             auto patch_index_of_current_hit = std::make_pair(t_window_id, channel_id);
             // if(channel_id_voltage.find(channel_id) == channel_id_voltage.end()){
             if(channel_id_voltage.find(patch_index_of_current_hit) == channel_id_voltage.end()){
-                channel_id_voltage[patch_index_of_current_hit] = WaveformSimulator::GenerateBaseline((int) (time_window / time_per_bin) );
+                channel_id_voltage[patch_index_of_current_hit] = WaveformSimulator::GenerateBaseline(num_samples_per_batch );
             }
             // Photon hit time is relative to the current time window start time.
             wf_simulator.AddSinglePhoton(channel_id_voltage[patch_index_of_current_hit],
-                                         t - time_window*t_window_id, time_per_bin);
+                                         t - time_window_per_batch*t_window_id, time_per_sample);
         }
 
         // Check threshold for each waveform
@@ -92,7 +90,7 @@ int main(int argc, char** argv){
             // Write channel_id and start time
             // board id
             outfile.write((char*)&(iter.first.second), 4);
-            unsigned long t_begin = ientry * 100000 + (long) (iter.first.first*time_window);
+            unsigned long t_begin = ientry * 100000 + (long) (iter.first.first*time_window_per_batch);
             outfile.write((char*)&t_begin, 8);
 
             unsigned long tbusy{0};

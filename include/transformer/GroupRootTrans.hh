@@ -8,7 +8,7 @@
 #include <TFile.h>
 #include <TTree.h>
 
-
+#include "data_structure/Event.hh"
 #include "data_structure/trident_ds.hh"
 
 class GroupRootTrans {
@@ -26,6 +26,7 @@ private:
     // file and tree for output
     TFile* out_file;
     TTree* t_waveform;
+    TTree* t_hits;
 
     // data branches
     int run_id{0};
