@@ -30,7 +30,9 @@ int main(int argc, char** argv){
     const double time_per_bin = 2;
     const double time_window = 1000; // ns
     const unsigned int protocol = 0xb2;
-    const double mV2ADC = (pow(2,14)-1)*1000/2.16;
+    auto get_adc_from_mV = [](double mV)->short {
+        return (short) (8620 - mV*(pow(2,14)-1) / 1000 / 2.16);
+    };
 
     // waveform simulator
     WaveformSimulator wf_simulator(waveform_path);
@@ -66,7 +68,7 @@ int main(int argc, char** argv){
         }
 
         // write event to file
-        // format: protocol, channel_id, event_id (time stamp), v0, v1, ..., v2499
+        // format: protocol, channel_id, event_id (time stamp), v0, v1, ..., v999
         unsigned int header{0};
         for(auto &iter: channel_id_voltage){
 
@@ -80,7 +82,7 @@ int main(int argc, char** argv){
             // Write channel_id and start time
             // board id
             outfile.write((char*)&(iter.first), 4);
-            unsigned long t_begin = ientry + 10;
+            unsigned long t_begin = ientry;
             outfile.write((char*)&t_begin, 8);
 
             unsigned long tbusy{0};
@@ -89,7 +91,7 @@ int main(int argc, char** argv){
             // Write Voltage
             for(auto &vol: v_voltage){
                 // outfile << vol << " ";
-                unsigned short adc_val = (short) (vol * mV2ADC);
+                unsigned short adc_val = get_adc_from_mV(vol);
                 // unsigned short adc_val = 8555;
 
                 outfile.write((char*)&adc_val, 2);
