@@ -24,13 +24,25 @@ void GroupRootTrans::ReadData(const GroupData &data) {
         return;
     ClearData();
 
-    for(auto &seg: data.segments){
-        ch_id = seg.channelNumber;
-        t_start = 2.f * (float) seg.startTime;
-        n_samp = seg.sampleSize;
-        adc_val = seg.adcValue;
-        t_waveform->Fill();
+    for (auto& seg: data.segments){
+        float cur_time = time_per_sample * (float) seg.startTime;
+        if (events.empty() ){
+            events.emplace_back(cur_time);
+        } else if(cur_time < events[events.size()-1].GetStartTime() + time_window_per_event){
+            // events[events.size()-1].AddSegment( &seg);
+            events[events.size() - 1].AddSegment(&seg);
+        } else{
+            // Fill root
+        }
     }
+    //
+    // for(auto &seg: data.segments){
+    //     ch_id = seg.channelNumber;
+    //     t_start = 2.f * (float) seg.startTime;
+    //     n_samp = seg.sampleSize;
+    //     adc_val = seg.adcValue;
+    //     t_waveform->Fill();
+    // }
 }
 
 void GroupRootTrans::Write() {

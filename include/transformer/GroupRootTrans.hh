@@ -8,6 +8,7 @@
 #include <TFile.h>
 #include <TTree.h>
 
+#include "constant.hh"
 #include "data_structure/Event.hh"
 #include "data_structure/trident_ds.hh"
 
@@ -34,6 +35,7 @@ private:
     float t_start{0};
     uint32_t n_samp{0};
     std::vector<uint16_t> adc_val{};
+    std::vector<Event> events{};
 
 };
 

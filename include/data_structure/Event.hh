@@ -8,17 +8,22 @@
 #include <vector>
 #include <queue>
 #include "data_structure/trident_ds.hh"
+#include "constant.hh"
 
 // One event is defined by a time window with length 20us.
 
 struct SingleHit{
-    float hit_t;
+    float start_t;
+    float width_t;
+    float peak_height;
+    float npe;
     uint64_t ch_id;
 };
 
 struct SingleWaveform{
-    float t_start;
-    std::vector<float> adc_voltage;
+    float start_t;
+    // std::vector<float> adc_voltage;
+    float adc_voltage[num_samples_per_batch];
     uint64_t ch_id;
 };
 
@@ -37,15 +42,16 @@ public:
     int GetTriggerLevel() {return trigger_level;}
     float GetStartTime() {return start_t;}
     const std::vector<SingleHit>& GetHits() {return hits;}
-    const std::vector<RawSegment*>& GetRawSegments() {return segments;}
-    void AddSegment(RawSegment* seg){ segments.push_back(seg); }
+    const std::vector<SingleWaveform>& GetWaveforms() {return waveforms;}
+    // std::vector<const RawSegment *> GetRawSegments() {return segments;}
+    // void AddSegment(const RawSegment *seg){ segments.push_back(seg); }
 
     /*!
      * Reconstruct hit based on a RawSegment (waveform).
      * @param seg: RawSegment to be reconstructed.
      * @return: Number of reconstructed hits.
      */
-    int ReconHits(RawSegment* seg);
+    float AddSegment(const RawSegment *seg);
 
 
     /*!
@@ -74,7 +80,8 @@ private:
     int trigger_level{0};
     float start_t{0};
     std::vector<SingleHit> hits;
-    std::vector<RawSegment*> segments;
+    std::vector<SingleWaveform> waveforms;
+    // std::vector<const RawSegment*> segments;
 };
 
 
