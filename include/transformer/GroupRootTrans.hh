@@ -26,15 +26,26 @@ private:
 
     // file and tree for output
     TFile* out_file;
-    TTree* t_waveform;
-    TTree* t_hits;
-
-    // data branches
     int run_id{0};
+
+    // waveform tree
+    TTree* t_waveforms;
+    float start_t{0};
     uint64_t ch_id{0};
-    float t_start{0};
-    uint32_t n_samp{0};
-    std::vector<uint16_t> adc_val{};
+    int num_samples = num_samples_per_batch;
+    float adc_voltage[num_samples_per_batch];
+
+    // hits tree
+    TTree* t_hits;
+    float h_start_t;
+    float width_t;
+    float peak_height;
+    float np;
+    uint64_t h_ch_id;
+    // // data branches
+    // uint32_t n_samp{0};
+    // std::vector<uint16_t> adc_val{};
+
     std::vector<Event> events{};
 
 };

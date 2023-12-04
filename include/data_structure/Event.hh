@@ -16,7 +16,7 @@ struct SingleHit{
     float start_t;
     float width_t;
     float peak_height;
-    float npe;
+    float np;
     uint64_t ch_id;
 };
 

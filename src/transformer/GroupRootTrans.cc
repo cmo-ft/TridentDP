@@ -8,41 +8,62 @@
 GroupRootTrans::GroupRootTrans(std::string  ofname)
     : _ofname{std::move(ofname)} {
     out_file = new TFile(_ofname.c_str(), "RECREATE");
-    t_waveform = new TTree("Waveform", "Waveform");
 
-    t_waveform->Branch("RunId", &run_id, "RunId/I");
-    t_waveform->Branch("ChId", &ch_id, "ChId/L");
-    t_waveform->Branch("t0", &t_start, "t0/F");
-    t_waveform->Branch("n_samp", &n_samp, "n_samp/I");
-    t_waveform->Branch("adc_val", &adc_val);
+    // waveform tree
+    t_waveforms = new TTree("Waveforms", "Waveforms");
+    t_waveforms->Branch("RunId", &run_id, "RunId/I");
+    t_waveforms->Branch("ChId", &ch_id, "ChId/L");
+    t_waveforms->Branch("t0", &start_t, "t0/F");
+    t_waveforms->Branch("NumSamples", &num_samples, "NumSamples/I");
+    t_waveforms->Branch("vol", adc_voltage, "vol[NumSamples]/F");
+
+
+    // hits tree
+    t_hits = new TTree("Hits", "Hits");
+    t_hits->Branch("RunId", &run_id, "RunId/I");
+    t_hits->Branch("t0", &h_start_t, "t0/F");
+    t_hits->Branch("tWidth", &width_t, "tWidth/F");
+    t_hits->Branch("peak", &peak_height, "peak/F");
+    t_hits->Branch("np", &np, "np/F");
+    t_hits->Branch("ChId", &h_ch_id, "ChId/l");
 }
 
 void GroupRootTrans::ReadData(const GroupData &data) {
-    run_id = (int) data.runNumber;
     // skip empty events
     if (data.segments.empty())
         return;
     ClearData();
+    run_id = (int) data.runNumber;
 
     for (auto& seg: data.segments){
         float cur_time = time_per_sample * (float) seg.startTime;
         if (events.empty() ){
             events.emplace_back(cur_time);
-        } else if(cur_time < events[events.size()-1].GetStartTime() + time_window_per_event){
+        } else if(cur_time < events[events.size()-1].GetStartTime() + time_window_per_event &&
+            &seg!=&data.segments.back()){
             // events[events.size()-1].AddSegment( &seg);
             events[events.size() - 1].AddSegment(&seg);
         } else{
-            // Fill root
+            // retrieve waveform
+            for(auto& wf: events[events.size() - 1].GetWaveforms()){
+                ch_id = wf.ch_id;
+                start_t = wf.start_t;
+                std::copy(std::begin(wf.adc_voltage), std::end(wf.adc_voltage),
+                          std::begin(adc_voltage));
+                t_waveforms->Fill();
+            }
+
+            // retrieve hits
+            for(auto& hit: events[events.size()-1].GetHits()){
+                h_start_t = hit.start_t;
+                width_t = hit.width_t;
+                peak_height = hit.peak_height;
+                np = hit.np;
+                h_ch_id = hit.ch_id;
+                t_hits->Fill();
+            }
         }
     }
-    //
-    // for(auto &seg: data.segments){
-    //     ch_id = seg.channelNumber;
-    //     t_start = 2.f * (float) seg.startTime;
-    //     n_samp = seg.sampleSize;
-    //     adc_val = seg.adcValue;
-    //     t_waveform->Fill();
-    // }
 }
 
 void GroupRootTrans::Write() {
@@ -52,14 +73,24 @@ void GroupRootTrans::Write() {
 }
 
 GroupRootTrans::~GroupRootTrans() {
-    delete t_waveform;
+    delete t_waveforms;
     delete out_file;
 }
 
 void GroupRootTrans::ClearData() {
     run_id = 0;
+
+    start_t = 0;
     ch_id = 0;
-    t_start = 0;
-    n_samp = 0;
-    adc_val.clear();
+    num_samples = num_samples_per_batch;
+    // for(float & i : adc_voltage)
+    //     i = 0;
+    memset(adc_voltage, 0, sizeof(adc_voltage));
+
+    h_start_t = 0;
+    width_t = 0;
+    peak_height = 0;
+    np = 0;
+    h_ch_id = 0;
+
 }
