@@ -48,8 +48,8 @@ int main(int argc, char** argv){
     for(int ientry=0; ientry<pmt_tree->GetEntries(); ientry++){
         pmt_tree->GetEntry(ientry);
 
-        // Get the start time of the event: min hit T-200ns
-        float t_start = *std::min_element(pmt_hit_t->begin(), pmt_hit_t->end()) - 200;
+        // Get the start time of the event: min hit T
+        float t_start = *std::min_element(pmt_hit_t->begin(), pmt_hit_t->end());
 
         // unordered_map<int, vector<double>> channel_id_voltage;
         map<pair<int, int>, vector<double>> channel_id_voltage;

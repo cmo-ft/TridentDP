@@ -17,12 +17,12 @@ Event::Event(float start_t): start_t(start_t) {
 float Event::AddSegment(const RawSegment *seg) {
     float total_npe = 0.;
     auto& adc_val = seg->adcValue;
-    float seg_start_t = (float) seg->startTime * time_per_sample;
+    float seg_start_t = (float) seg->startTime;
 
     // TODO: Find the right way to calculate baseline.
     ushort baseline_value = 8620;
     // TODO: Decide the suitable threshold & single_hit_integral
-    float threshold = 1.5, single_hit_integral = 17.;
+    float threshold = 1.5, single_hit_integral = 19.;
 
     // vector<float> adc_voltage(adc_val.size());
     // for (ulong i_val=0; i_val < adc_val.size(); i_val++){
@@ -56,6 +56,7 @@ float Event::AddSegment(const RawSegment *seg) {
                 hits.push_back({seg_start_t+(float)hit_start_idx*time_per_sample,
                                 (float)(i_val-hit_start_idx)*time_per_sample, peak_height, npe,
                                 seg->channelNumber});
+                integral = 0, peak_height = 0;
                 hit_start_idx = -1;
             }
         } else if(adc_voltage[i_val] > threshold && adc_voltage[i_val + 1] > threshold && adc_voltage[i_val + 2] > threshold){

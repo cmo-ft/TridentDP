@@ -36,32 +36,41 @@ void GroupRootTrans::ReadData(const GroupData &data) {
     run_id = (int) data.runNumber;
 
     for (auto& seg: data.segments){
-        float cur_time = time_per_sample * (float) seg.startTime;
-        if (events.empty() ){
+        auto cur_time = (float) seg.startTime;
+        if (events.empty() || cur_time >= events.back().GetStartTime() + time_window_per_event){
             events.emplace_back(cur_time);
-        } else if(cur_time < events[events.size()-1].GetStartTime() + time_window_per_event &&
-            &seg!=&data.segments.back()){
-            // events[events.size()-1].AddSegment( &seg);
-            events[events.size() - 1].AddSegment(&seg);
-        } else{
-            // retrieve waveform
-            for(auto& wf: events[events.size() - 1].GetWaveforms()){
-                ch_id = wf.ch_id;
-                start_t = wf.start_t;
-                std::copy(std::begin(wf.adc_voltage), std::end(wf.adc_voltage),
-                          std::begin(adc_voltage));
-                t_waveforms->Fill();
-            }
+        }
+        events.back().AddSegment(&seg);
 
-            // retrieve hits
-            for(auto& hit: events[events.size()-1].GetHits()){
-                h_start_t = hit.start_t;
-                width_t = hit.width_t;
-                peak_height = hit.peak_height;
-                np = hit.np;
-                h_ch_id = hit.ch_id;
-                t_hits->Fill();
-            }
+        // if (events.empty()){
+        //     events.emplace_back(cur_time);
+        //     events.back().AddSegment(&seg);
+        // } else if(cur_time < events[events.size()-1].GetStartTime() + time_window_per_event){
+        //     std::cout<<cur_time<<std::endl;
+        //     events.back().AddSegment(&seg);
+        // } else{
+        //     // Fill the tree and start a new event
+        // }
+    }
+
+    for(auto& event: events){
+        // retrieve waveform
+        for(auto& wf: event.GetWaveforms()){
+            ch_id = wf.ch_id;
+            start_t = wf.start_t;
+            std::copy(std::begin(wf.adc_voltage), std::end(wf.adc_voltage),
+                      std::begin(adc_voltage));
+            t_waveforms->Fill();
+        }
+
+        // retrieve hits
+        for(auto& hit: event.GetHits()){
+            h_start_t = hit.start_t;
+            width_t = hit.width_t;
+            peak_height = hit.peak_height;
+            np = hit.np;
+            h_ch_id = hit.ch_id;
+            t_hits->Fill();
         }
     }
 }
