@@ -4,7 +4,6 @@
 
 #include "transformer/GroupRootTrans.hh"
 
-
 GroupRootTrans::GroupRootTrans(std::string  ofname)
     : _ofname{std::move(ofname)} {
     out_file = new TFile(_ofname.c_str(), "RECREATE");
@@ -12,15 +11,19 @@ GroupRootTrans::GroupRootTrans(std::string  ofname)
     // waveform tree
     t_waveforms = new TTree("Waveforms", "Waveforms");
     t_waveforms->Branch("RunId", &run_id, "RunId/I");
+    t_waveforms->Branch("EvtId", &event_id, "EvtId/I");
     t_waveforms->Branch("ChId", &ch_id, "ChId/L");
     t_waveforms->Branch("t0", &start_t, "t0/F");
     t_waveforms->Branch("NumSamples", &num_samples, "NumSamples/I");
+    t_waveforms->Branch("baseline", &baseline_value, "baseline/F");
     t_waveforms->Branch("vol", adc_voltage, "vol[NumSamples]/F");
+
 
 
     // hits tree
     t_hits = new TTree("Hits", "Hits");
     t_hits->Branch("RunId", &run_id, "RunId/I");
+    t_hits->Branch("EvtId", &event_id, "EvtId/I");
     t_hits->Branch("t0", &h_start_t, "t0/F");
     t_hits->Branch("tWidth", &width_t, "tWidth/F");
     t_hits->Branch("peak", &peak_height, "peak/F");
@@ -32,8 +35,10 @@ void GroupRootTrans::ReadData(const GroupData &data) {
     // skip empty events
     if (data.segments.empty())
         return;
-    ClearData();
-    run_id = (int) data.runNumber;
+    // auto cur_event_id = event_id;
+    // ClearData();
+    // event_id = cur_event_id;
+    // run_id = (int) data.runNumber;
 
     for (auto& seg: data.segments){
         auto cur_time = (float) seg.startTime;
@@ -58,6 +63,7 @@ void GroupRootTrans::ReadData(const GroupData &data) {
         for(auto& wf: event.GetWaveforms()){
             ch_id = wf.ch_id;
             start_t = wf.start_t;
+            baseline_value = wf.baseline_value;
             std::copy(std::begin(wf.adc_voltage), std::end(wf.adc_voltage),
                       std::begin(adc_voltage));
             t_waveforms->Fill();
@@ -72,23 +78,28 @@ void GroupRootTrans::ReadData(const GroupData &data) {
             h_ch_id = hit.ch_id;
             t_hits->Fill();
         }
+        event_id += 1;
     }
+    // t_waveforms->AutoSave("SaveSelf");
+    // t_hits->AutoSave("SaveSelf");
 }
 
 void GroupRootTrans::Write() {
     if(out_file != nullptr) {
         out_file->Write();
+        out_file->Close();
     }
 }
 
 GroupRootTrans::~GroupRootTrans() {
-    delete t_waveforms;
+    // delete t_waveforms;
+    // delete t_hits;
     delete out_file;
 }
 
 void GroupRootTrans::ClearData() {
     run_id = 0;
-
+    event_id = 0;
     start_t = 0;
     ch_id = 0;
     num_samples = num_samples_per_batch;

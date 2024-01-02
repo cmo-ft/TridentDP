@@ -39,11 +39,29 @@ int main(int argc, char *argv[]) {
     auto data_file = open_sequential_input_file(ifname, TridentRealm ());
     auto group_data = data_file.read_one_type<GroupData>();
 
-    GroupRootTrans gr_trans{ofname};
+    GroupRootTrans* gr_trans = nullptr;
 
+    int num_group_per_rootfile = 10;
+    int i_data = 0;
     for (const auto &data : group_data) {
-        gr_trans.ReadData(data);
+        if (gr_trans==nullptr){
+            gr_trans = new GroupRootTrans(ofname + to_string(i_data / num_group_per_rootfile) + ".root");
+        }
+
+        std::cout << "Reading data " << i_data << "..." << std::endl << std::flush;
+        gr_trans->ReadData(data);
+
+        if ((i_data+1) % num_group_per_rootfile == 0){
+            gr_trans->Write();
+            delete gr_trans;
+            gr_trans = nullptr;
+        }
+        i_data += 1;
     }
-    gr_trans.Write();
+
+    if (gr_trans!=nullptr){
+        gr_trans->Write();
+        delete gr_trans;
+    }
 
 }

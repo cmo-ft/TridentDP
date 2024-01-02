@@ -22,6 +22,7 @@ struct SingleHit{
 
 struct SingleWaveform{
     float start_t;
+    float baseline_value;
     // std::vector<float> adc_voltage;
     float adc_voltage[num_samples_per_batch];
     uint64_t ch_id;

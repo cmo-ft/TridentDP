@@ -27,12 +27,14 @@ private:
     // file and tree for output
     TFile* out_file;
     int run_id{0};
+    int event_id{0};
 
     // waveform tree
     TTree* t_waveforms;
     float start_t{0};
     uint64_t ch_id{0};
     int num_samples = num_samples_per_batch;
+    float baseline_value{0.};
     float adc_voltage[num_samples_per_batch];
 
     // hits tree

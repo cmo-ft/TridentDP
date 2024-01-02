@@ -20,7 +20,14 @@ float Event::AddSegment(const RawSegment *seg) {
     float seg_start_t = (float) seg->startTime;
 
     // TODO: Find the right way to calculate baseline.
-    ushort baseline_value = 8620;
+    // ushort baseline_value = 8620;
+    float baseline_value = 0.;
+    
+    for (int i_val=0; i_val < 30; i_val++){
+        baseline_value +=  (float) adc_val[i_val];
+    }
+    baseline_value /= 30;
+
     // TODO: Decide the suitable threshold & single_hit_integral
     float threshold = 1.5, single_hit_integral = 19.;
 
@@ -28,7 +35,7 @@ float Event::AddSegment(const RawSegment *seg) {
     // for (ulong i_val=0; i_val < adc_val.size(); i_val++){
     //     adc_voltage[i_val] = (float) (baseline_value - adc_val[i_val] / (pow(2, 14) - 1) * 2.16 * 1000);
     // }
-    waveforms.push_back({seg_start_t, {}, seg->channelNumber});
+    waveforms.push_back({seg_start_t/(float)1e9, baseline_value, {}, seg->channelNumber});
     auto adc_voltage = waveforms[waveforms.size()-1].adc_voltage;
     for (int i_val=0; i_val < num_samples_per_batch; i_val++){
         adc_voltage[i_val] =  (float) ((float) (baseline_value - adc_val[i_val]) / (pow(2, 14) - 1) * 2.16 * 1000);
@@ -53,7 +60,7 @@ float Event::AddSegment(const RawSegment *seg) {
                 // for(int i=0; i<hits_in_previous_bump; i++){
                 //     hits.push_back({seg_start_t + (float )hit_start_idx*time_per_sample, seg->channelNumber});
                 // }
-                hits.push_back({seg_start_t+(float)hit_start_idx*time_per_sample,
+                hits.push_back({ (seg_start_t+(float)hit_start_idx*time_per_sample) / (float)1e9,
                                 (float)(i_val-hit_start_idx)*time_per_sample, peak_height, npe,
                                 seg->channelNumber});
                 integral = 0, peak_height = 0;

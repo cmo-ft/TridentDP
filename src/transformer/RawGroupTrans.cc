@@ -3,7 +3,7 @@
 //
 
 #include "transformer/RawGroupTrans.hh"
-
+#include "constant.hh"
 #include <x86intrin.h>
 
 #include <iostream>
@@ -70,7 +70,7 @@ namespace raw_group_trans {
 
         // Following 8 bytes: start time in unit [bin]
         // Actual time (in ns) = startTime * 2
-        auto startTime = read_segtime(s);
+        auto startTime = read_segtime(s) * (int) time_per_sample;
 
         // Size for adc values: size - 4(header) - 4 (ch_id) - 8(t_start) - 8(t_busy)
         // 2 byte per count. So need to divide by 2.
@@ -151,7 +151,7 @@ namespace raw_group_trans {
                      * THEN add current segment into group
                      * else current segment belongs to the next group
                      */
-                    if (segments.empty() || (current_end-group_start<1000000) ||
+                    if (segments.empty() || (current_end-group_start<1e9) ||
                     (current_end+group_gap>segment.startTime)) {
                             segments.push_back(segment);
                             current_end = current_end > seg_end ? current_end : seg_end;

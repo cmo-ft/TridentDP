@@ -7,9 +7,9 @@
 
 const float sampling_frequency = 5e8;
 const float time_per_sample = 1e9 / 5e8; //unit: ns
-const int num_samples_per_batch = 500;
+const int num_samples_per_batch = 402;
 const float time_window_per_batch = num_samples_per_batch * time_per_sample;
 
-const float time_window_per_event = 10000;
+const float time_window_per_event = 1000000;
 
 #endif //TRIDENTDP_CONSTANT_HH
