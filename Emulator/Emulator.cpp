@@ -6,7 +6,6 @@
 #include "constant.hh"
 #include "WaveformSimulator.hh"
 #include "data_structure/Event.hh"
-#include "data_structure/trident_ds-generated.hh"
 #include <utility>
 #include <fstream>
 
