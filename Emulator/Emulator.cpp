@@ -116,8 +116,8 @@ int main(int argc, char** argv){
             // board id
             cur_seg.channelNumber = iter.first.second;
             outfile_bin.write((char *) &(iter.first.second), 4);
-            cur_seg.startTime = (long) (iter.first.first * time_window_per_batch);
             unsigned long t_begin = ientry * 100000 + (long) (iter.first.first * time_window_per_batch);
+            cur_seg.startTime = t_begin;
             outfile_bin.write((char *) &t_begin, 8);
 
             unsigned long tbusy{0};
