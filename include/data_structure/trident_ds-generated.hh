@@ -1,3 +1,5 @@
+#ifndef TRIDENT_DS_GENERATED
+#define TRIDENT_DS_GENERATED
 struct EventNumber;
 struct RawPmtSegment;
 struct RawSegment;
@@ -104,3 +106,5 @@ struct GroupData {
 
     PBSS_TAGGED_STRUCT(PBSS_TAG_MEMBER(1, &GroupData::runNumber), PBSS_TAG_MEMBER(2, &GroupData::groupNumber), PBSS_TAG_MEMBER(3, &GroupData::startTime), PBSS_TAG_MEMBER(4, &GroupData::endTime), PBSS_TAG_MEMBER(5, &GroupData::segments));
 };
+
+#endif

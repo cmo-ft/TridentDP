@@ -5,6 +5,8 @@
 
 #include "constant.hh"
 #include "WaveformSimulator.hh"
+#include "data_structure/Event.hh"
+#include "data_structure/trident_ds-generated.hh"
 #include <utility>
 #include <fstream>
 
@@ -14,21 +16,40 @@ using std::ios;
 using std::unordered_map;
 using std::map;
 using std::pair;
+using std::string;
 
 int main(int argc, char** argv){
     TFile* infile;
-    // FILE* outfile;
     std::string waveform_path;
-    if(argc != 4){
+    if(argc < 4){
         std::cerr << "Wrong input arguments! " <<
-                  "Please input: Emulator [data_path] [out_path] [waveform_data_path]" << std::endl;
+                  "Please input: Emulator [data_path] [out_path] [waveform_data_path] [1 if ROOT as output]" << std::endl;
         return -1;
     }
 
     infile =  new TFile(argv[1]);
-    // outfile = fopen(argv[2], "w");
-    ofstream outfile(argv[2], ios::out | ios::binary);
     waveform_path = argv[3];
+
+    ofstream outfile_bin(argv[2], ios::out | ios::binary);
+
+    // If save ROOT file
+    TFile* outfile_root = nullptr;
+    TTree* t_hits = nullptr;
+    float h_start_t, width_t, peak_height, np;
+    uint64_t h_ch_id;
+    bool save_root = false;
+    if (argc == 5 && string(argv[4]) == "1"){
+        std::cout << "Will create ROOT file: " << argv[2] << ".root" << std::endl;
+        save_root = true;
+        outfile_root = new TFile(TString(argv[2]) + ".root", "RECREATE");
+        // hits tree
+        t_hits = new TTree("Hits", "Hits");
+        t_hits->Branch("t0", &h_start_t, "t0/F");
+        t_hits->Branch("tWidth", &width_t, "tWidth/F");
+        t_hits->Branch("peak", &peak_height, "peak/F");
+        t_hits->Branch("np", &np, "np/F");
+        t_hits->Branch("ChId", &h_ch_id, "ChId/l");
+    }
 
     const unsigned int protocol = 0xb2;
     auto get_adc_from_mV = [](double mV)->short {
@@ -75,39 +96,66 @@ int main(int argc, char** argv){
             WaveformSimulator::CheckThreshold(v_voltage);
         }
 
+        // Create event
+        Event cur_event(0);
+
         // write event to file
+        // write to binary
         // format: protocol, channel_id, event_id (time stamp), v0, v1, ..., v999
         unsigned int header{0};
-        for(auto &iter: channel_id_voltage){
+        for (auto &iter: channel_id_voltage) {
+            RawSegment cur_seg;
 
             auto block_size = iter.second.size() * 2 + 4 + 4 + 8 + 8;
 
-            header = (protocol<<24);
+            header = (protocol << 24);
             header = (header & 0xFF000000) | block_size;
-            outfile.write((char*)&header, 4);
+            outfile_bin.write((char *) &header, 4);
 
-            vector<double>& v_voltage = iter.second;
+            vector<double> &v_voltage = iter.second;
             // Write channel_id and start time
             // board id
-            outfile.write((char*)&(iter.first.second), 4);
-            unsigned long t_begin = ientry * 100000 + (long) (iter.first.first*time_window_per_batch);
-            outfile.write((char*)&t_begin, 8);
+            cur_seg.channelNumber = iter.first.second;
+            outfile_bin.write((char *) &(iter.first.second), 4);
+            cur_seg.startTime = (long) (iter.first.first * time_window_per_batch);
+            unsigned long t_begin = ientry * 100000 + (long) (iter.first.first * time_window_per_batch);
+            outfile_bin.write((char *) &t_begin, 8);
 
             unsigned long tbusy{0};
-            outfile.write((char*)&tbusy, 8);
+            outfile_bin.write((char *) &tbusy, 8);
 
             // Write Voltage
-            for(auto &vol: v_voltage){
-                // outfile << vol << " ";
+            for (auto &vol: v_voltage) {
+                // outfile_bin << vol << " ";
                 unsigned short adc_val = get_adc_from_mV(vol);
+                cur_seg.adcValue.emplace_back(adc_val);
                 // unsigned short adc_val = 8555;
 
-                outfile.write((char*)&adc_val, 2);
+                outfile_bin.write((char *) &adc_val, 2);
             }
             v_voltage.clear();
+
+            // Add segment to Event
+            cur_event.AddSegment(&cur_seg);
+        }
+
+        if (save_root) {
+            // retrieve hits
+            for (auto &hit: cur_event.GetHits()) {
+                h_start_t = hit.start_t;
+                width_t = hit.width_t;
+                peak_height = hit.peak_height;
+                np = hit.np;
+                h_ch_id = hit.ch_id;
+                t_hits->Fill();
+            }
         }
     }
-    outfile.close();
+    outfile_bin.close();
 
+    if (save_root){
+        outfile_root->Write();
+        outfile_root->Close();
+    }
     return 0;
 }

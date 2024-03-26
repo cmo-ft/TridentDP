@@ -6,7 +6,9 @@ include_directories(include)
 #----------------------------------------------------------------------------
 # Find required packages)
 #
-file(GLOB  Emulator_sources src/*)
+
+include_directories(../include)
+file(GLOB  Emulator_sources src/* ../src/data_structure/Event.cc)
 file(GLOB  Emulator_headers include/*)
 
 #----------------------------------------------------------------------------
