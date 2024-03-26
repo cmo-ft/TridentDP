@@ -7,10 +7,37 @@
 
 #include <vector>
 #include <queue>
-#include "data_structure/trident_ds.hh"
+#include <cstdint>
 #include "constant.hh"
 
-// One event is defined by a time window with length 20us.
+struct RawSegment {
+    uint64_t startTime;
+    uint32_t channelNumber;
+    std::vector<uint16_t> adcValue;
+    uint64_t busyTime;
+    uint32_t sampleSize;
+    float baseLine;
+
+    bool operator==(const RawSegment& other) const
+    {
+        return (startTime==other.startTime) && (channelNumber==other.channelNumber) && (adcValue==other.adcValue) && (busyTime==other.busyTime) && (sampleSize==other.sampleSize) && (baseLine==other.baseLine);
+    }
+
+    template <class Other>
+    auto operator<(const Other& other) const
+    -> typename std::enable_if<std::is_same<Other, RawSegment>::value, decltype(bool(startTime<other.startTime), bool(channelNumber<other.channelNumber), bool(adcValue<other.adcValue), bool(busyTime<other.busyTime), bool(sampleSize<other.sampleSize), bool(baseLine<other.baseLine))>::type
+    {
+        if (startTime != other.startTime) return startTime < other.startTime;
+        if (channelNumber != other.channelNumber) return channelNumber < other.channelNumber;
+        if (adcValue != other.adcValue) return adcValue < other.adcValue;
+        if (busyTime != other.busyTime) return busyTime < other.busyTime;
+        if (sampleSize != other.sampleSize) return sampleSize < other.sampleSize;
+        if (baseLine != other.baseLine) return baseLine < other.baseLine;
+        return false;
+    }
+
+};
+
 
 struct SingleHit{
     float start_t;
