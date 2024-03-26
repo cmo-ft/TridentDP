@@ -6,6 +6,15 @@ include_directories(include)
 #----------------------------------------------------------------------------
 # Find required packages)
 #
+find_package(yaml-cpp REQUIRED)
+#----------------------------------------------------------------------------
+FIND_PACKAGE(ROOT REQUIRED COMPONENTS Geom TMVA MathMore)
+IF (ROOT_FOUND)
+    INCLUDE_DIRECTORIES(${ROOT_INCLUDE_DIRS})
+    INCLUDE_DIRECTORIES(${ROOT_INCLUDE_DIR})
+    LINK_LIBRARIES(${ROOT_LIBRARIES})
+    LINK_DIRECTORIES(${ROOT_LIBRARY_DIR})
+ENDIF ()
 
 include_directories(../include)
 file(GLOB  Emulator_sources src/* ../src/data_structure/Event.cc)
